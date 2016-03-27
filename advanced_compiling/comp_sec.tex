@@ -1,0 +1,912 @@
+% !TeX program = xelatex
+
+% \documentclass[]{article}
+
+
+\documentclass[landscape]{article}
+\usepackage{scrextend}
+\KOMAoption{fontsize}{7pt}
+
+\usepackage{enumitem}
+\setlist[itemize,1]{leftmargin=0mm}
+
+% \usepackage[T1]{fontenc}
+% \usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+% use upquote if available, for straight quotes in verbatim environments
+% \IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+%   \usepackage[utf8]{inputenc}
+% % % \else % if luatex or xelatex
+% %   \ifxetex
+% %     \usepackage{mathspec}
+% %     \usepackage{xltxtra,xunicode}
+% %   \else
+% %     \usepackage{fontspec}
+% %   \fi
+% %   \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+% %   \newcommand{\euro}{€}
+% % % % % \fi
+% use microtype if available
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\ifxetex
+  \usepackage[setpagesize=false, % page size defined by xetex
+              unicode=false, % unicode breaks when used with xetex
+              xetex]{hyperref}
+\else
+  \usepackage[unicode=true]{hyperref}
+\fi
+% \hypersetup{breaklinks=true,
+%             bookmarks=true,
+%             pdfauthor={Krishna Parashar},
+%             pdftitle={Computer Security Field Guide},
+%             colorlinks=true,
+%             citecolor=blue,
+%             urlcolor=blue,
+%             linkcolor=magenta,
+%             pdfborder={0 0 0}}
+% \urlstyle{same}  % don't use monospace font for urls
+
+
+
+
+\usepackage{multicol, calc, ifthen, amsmath, amsthm, amsfonts, amssymb, color, graphicx, fontspec, xunicode}
+
+\usepackage[landscape]{geometry}
+
+% \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+\ifthenelse{\lengthtest { \paperwidth = 11in}}
+    { \geometry{top=.3in,left=.3in,right=.3in,bottom=.3in} }
+    {\ifthenelse{ \lengthtest{ \paperwidth = 297mm}}
+        {\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+        {\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+    }
+\pagestyle{empty}
+\makeatletter
+\setmainfont{Source Sans Pro}
+\setmonofont{Menlo}
+\DeclareMathSizes{3}{3}{2}{1}
+
+\renewcommand{\section}{\@startsection{section}{1}{0mm}{-1ex plus -.5ex minus -.2ex}{0.5ex plus .2ex}{\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}{-1explus -.5ex minus -.2ex}{0.5ex plus .2ex}{\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}{-1ex plus -.5ex minus -.2ex}{1ex plus .2ex}{\normalfont\small\bfseries}}
+\makeatother
+\setcounter{secnumdepth}{0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+\hypersetup{colorlinks=true, urlcolor=blue}
+\def\ci{\perp\!\!\!\perp}
+
+
+
+
+
+
+% \setlength{\parindent}{0pt}
+% \setlength{\parskip}{6pt plus 2pt minus 1pt}
+% \setlength{\emergencystretch}{3em}  % prevent overfull lines
+\setcounter{secnumdepth}{0}
+
+\title{Computer Security Field Guide}
+\author{Krishna Parashar}
+\date{\href{http://atrus.co}{Atrus}}
+
+\begin{document}
+
+
+
+
+
+
+\begin{multicols}{3}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+    \Large{\underline{Computer Security Field Guide}} \\
+\end{center}
+\begin{center}
+    Written by: \href{http://krishna.im}{Krishna Parashar}\\
+    Published by: \href{http://www.atrus.co}{Atrus}\\
+\end{center}
+
+
+% % \maketitle
+% 
+% \section{Notation}\label{notation}
+
+All of the following uses the IA-32 (Intel 32-bit systems) Notation
+
+Instructions are formatted at inst src dst
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Registers are prefixed with \%
+\item
+  Constants are prefixed with \$
+\item
+  (\$exx) means accessing memory at register \%exx
+\item
+  l suffix for instructions that are 32-bit (long) instructions
+\item
+  SFP is the saved \%ebp on the stack
+\item
+  OFP is the old \%ebp from the previous stack frame
+\item
+  RIP is the return address on the stack
+\end{itemize}
+
+\subsection{Registers}\label{registers}
+
+There are six general purpose registers: \%eax, \%ebx, \%ecx, \%edx,
+\%edi, \%esi (\%eax stores return value)
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \%ebp - base pointer, indicates start of stack frame (gen const for
+  given function).
+\item
+  \%esp - stack pointer, indicates bottom on stack (can and does
+  change).
+\item
+  \%eip - instruction pointer, indicates instruction to run.
+\end{enumerate}
+
+\subsection{Instructions}\label{instructions}
+
+\begin{itemize}
+\item
+  mov a, b - copies value of a into b
+\item
+  push a - pushes a onto the stack (decrements stack, copies value over)
+\item
+  pop a - pop data from stack on a (copies value over and increments
+  stack)
+\item
+  call func - pushes address of next instruction onto stack and
+  transfers control to func
+\item
+  ret - pops return address of next instruction onto stack and transfers
+  control to func
+\item
+  leave - mov \%ebp, \%esp then pop \%ebs (restores previous stack
+  frame)
+\item
+  push1 \%ebp is part of the prologue for instructions that move the
+  stack pointer to the current top of the stack. You then call movl
+  \%esp, \%ebp to move \$ebp to where \%esp is. You do this at the
+  beginning of each function call.
+\item
+  You push arguments in memory in reverse order.
+\item
+  Indexes in array are stored with the highest index immediately under
+  the SFP, and lower values under that.
+\end{itemize}
+
+\section{Introduction}\label{introduction}
+
+\section{Injection vulnerabilities, buffer overflows, and memory
+safety}\label{injection-vulnerabilities-buffer-overflows-and-memory-safety}
+
+\section{Software security}\label{software-security}
+
+\section{Access control, OS security}\label{access-control-os-security}
+
+\section{Privilege separation, security
+principles}\label{privilege-separation-security-principles}
+
+\section{Security principles}\label{security-principles}
+
+\section{Web security: access control, same-origin
+policy}\label{web-security-access-control-same-origin-policy}
+
+\section{Web security: injection
+vulnerabilities}\label{web-security-injection-vulnerabilities}
+
+\section{Web security: XSS}\label{web-security-xss}
+
+\section{Web security: session management and
+CSRF}\label{web-security-session-management-and-csrf}
+
+\section{Authentication and
+impersonation}\label{authentication-and-impersonation}
+
+\section{Web security: UI-based
+attacks}\label{web-security-ui-based-attacks}
+
+\section{Tracking on the web}\label{tracking-on-the-web}
+
+\section{Symmetric-key encryption}\label{symmetric-key-encryption}
+
+\section{Why This Exists}\label{why-this-exists}
+
+While taking my Machine Structures class I found it very difficult to
+conceptually understand and network the plethora of new found concepts.
+Thus I wrote up this brief synopsis of the concepts I found useful to
+understanding the core ideas. This is of course by no means
+\textbf{comprehensive} but I do hope it will provide you with a somewhat
+better understanding computer architecture. Please feel free to
+\href{mailto:me@krishna.im}{email me} if you have an questions,
+suggestions, or corrections. Thanks and enjoy!
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Introduction}\label{introduction-1}
+
+Okay, so you want to \emph{understand} Machine Structures. But why in
+heaven's name to you want to take on this rather insurmountable task?
+I'll take a wild guess you may be forced into this by your universities'
+curriculum task force-namely your professor. Despite the pain in
+frustration you \emph{may} go through as you dive deeper, believe or not
+the ideas in this realm are actually quite useful in your everyday life.
+In fact the advances we have made in machine structures in the past
+thirty years are the reason the internet exists in the capacity we have
+grown to love. Because of this progress you can use things like
+\emph{parallelism} and \emph{pipelining} run an intensive Google search
+in milliseconds or execute massive projects like mapping the Human
+Genome to tailor medical care specifically to you.
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{The Big Picture}\label{the-big-picture}
+
+So chances are you have already tried a bit of coding. But how does that
+virtual code turn in to physical phenomenon? Well, let's start of by
+defining a few ideas in the computing lexicon:
+
+\begin{itemize}
+\item
+  An \textbf{Operating System (OS)} is a interface between a your
+  program and the hardware that manages the resources and ensures you
+  can do things like use a keyboard, store data in memory, and handle
+  many applications at once.
+\item
+  A \textbf{Scripting Language} is probably what you did or want to
+  learn first. Python or Ruby or Java are pretty fun examples. These
+  scripting languages are named so because they try to look like you are
+  writing an essay (that actually \emph{does} cool things) in a pretty
+  logical and shorthand script. Want to print ``hello'' in Python? Here
+  it is: \texttt{print ("hello")}! (Beautiful isn't it?)
+\item
+  A \textbf{High Level Language} is something you may or may not have
+  written before. Lisp, C, C++ are all higher level languages. They may
+  not be as beautiful as the Python code, but boy oh boy can you make
+  the program run really, really fast. That same hello statement from
+  Python? Well in C it looks like:
+\end{itemize}
+
+\begin{quote}
+\texttt{char string{[}{]} = "Hello World";}
+\end{quote}
+
+\begin{quote}
+\texttt{printf("\%s \textbackslash{}n", string);}
+\end{quote}
+
+\begin{quote}
+(Now it's not as fun as before.)
+\end{quote}
+
+\begin{itemize}
+\item
+  A \textbf{Compiler} is a program that parses (goes through) your
+  complex C or C++ code and turns it into something that's harder for
+  you to read, but easier for a computer to read. FYI though, a
+  \textbf{compiler} is an umbrella term that can also mean turning that
+  beautiful Python code to a more complicated C version, but more
+  generally used to mean from C to an Assembly Language.
+\item
+  An \textbf{Assembly Language} is the output from the compiler and
+  looks like a funky short fragments such as:
+\end{itemize}
+
+\begin{quote}
+\texttt{multi \$t2 \$t1 4}
+\end{quote}
+
+\begin{quote}
+Don't worry if you don't understand what the above means. It is written
+in a language called \textbf{MIPS} that we will discuss later. It is
+worth mentioning that Intel has a very popular assembly language called
+\textbf{x86}, which can get quite complex and unfortunately will not be
+discussed in much detail in this guide.
+\end{quote}
+
+\begin{itemize}
+\item
+  An \textbf{Instruction} is each one of those funky little fragments
+  from the compiler.
+\item
+  An \textbf{Assembler} is yet another program that takes in the
+  assembly language and interprets that into something the \emph{CPU}
+  can read and execute.
+\item
+  The \textbf{Machine Language} is the output from the assembler looks
+  quite intimidating. Here is an example of what adding two things looks
+  like:
+\end{itemize}
+
+\begin{quote}
+\texttt{1000110010100000}
+\end{quote}
+
+\begin{quote}
+Yep! You guessed it. It's binary! The CPU's structure (discussed lated)
+need the format to be in just 1's and 0's for reasons in the realm of
+mathematics and logic. Feel free to look it up, there is a lot of cool
+information about that.
+\end{quote}
+
+\begin{itemize}
+\item
+  A \textbf{Binary Digit (Bit)} is well, the each one of those 1's and
+  0's. Each spot where you can have a digit contains a \emph{bit} so if
+  you have the above machine language output, that would be 16
+  \textbf{bits}. Now you may be wondering, ``Hey I have heard of a
+  \textbf{Byte}, is that the same as a \emph{bit}?'' Good question!
+\item
+  A \textbf{Byte} the what you call when you have a collection of 8
+  \emph{bits}. So if you have the 16 bits of machine language we were
+  talking about earlier, you can alternately say you have 2
+  \textbf{bytes} of machine language. Pretty cool huh? That 500 GB hard
+  drive? 500 * 1,000,000,000 (from the \emph{Giga} part) \textbf{bytes}
+  or 500 * 1,000,000,000 * 8 (from the byte part) \textbf{bits}!
+\item
+  A \textbf{Transistor} is the physical representation of the 0 or 1
+  bit. It is a physical digital \emph{switch}. When it is flipped
+  \emph{ON} (current going through it) it used to mean a \emph{1}, and
+  when it is \emph{OFF} (no current) it represents a \emph{0}.
+\end{itemize}
+
+Phew! Now that that's out of the way, we can starting talking about some
+really useful and brilliant uses of these things. Here is a quick visual
+summary:
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{The Six Great Ideas in Computer
+Architecture}\label{the-six-great-ideas-in-computer-architecture}
+
+It is now that we come upon the \emph{The Six Great Ideas in Computer
+Architecture} (so named due to their greatness). These topics will form
+the basis for the rest of this guide.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Design processors using
+  \href{http://wikipedia.org/wiki/Moores_law}{Moore's Law}} which states
+  processing speed and memory capacity will double every two years; an
+  occurrence that is related to the number of transistors in the chip
+  doubling. It was predicted by Gordon Moore in 1965, and has held
+  roughly true thus far.
+\item
+  \textbf{Abstract as much as possible in order to simplify the design.}
+  This idea relates to what we talked about in the previous section.
+  Split up the responsibility of understanding your code by using a
+  standardized hierarchy (High Level Language -\textgreater{} Assembly
+  Language -\textgreater{} Machine Level) so that each layer takes in an
+  input and passes it down to the next layer. This process makes it
+  infinitely easier to find out where things went or can go wrong.
+\item
+  \textbf{Design so that the most common case is fast.} This one should
+  be rather intuitive. Instead of wasting time, energy, and of course
+  money trying to optimize so that every part of the program (down to
+  the tiny edge cases) is blazing fast, why not just make the most used
+  cases faster? Otherwise you'll end up with a lot of code that is
+  probably only trivially faster than if you just made the most often
+  used cases faster.
+\item
+  \textbf{Make dependable systems by using redundancy.} This one is also
+  rather intuitive. Basically you should make backups of the data and
+  repeat the work with other parts of the computer system to ensure
+  everything is accurate and dependable (nothing fails).
+\item
+  \textbf{Use the capacities and speeds of different storage systems to
+  make things fast.} This is actually one of the main ideas in this
+  guide. We use this principal to optimize the usage of different kinds
+  of memory (fast vs.~slow, big vs.~small) to cleverly and thriftily use
+  the resources and make our programs fast and light.
+\item
+  \textbf{Find ways to improve performance} using techniques such as
+  \textbf{Parallelism, Pipelining, and Prediction}. The techniques will
+  also be discussed in greater detail later on. The basic idea for each
+  is to have multiple parts of the computer to split up the work
+  (\textbf{parallelism}), stage the processes so that no part of the
+  computer has the excuse that it wasn't told what to do
+  (\textbf{pipelining}), and lastly try to predict where along the
+  pipeline things might fail and proactively prevent those failures
+  (\textbf{prediction}).
+\end{enumerate}
+
+With basically these ideas we have managed to come to where computers
+are today! Pretty impressive, isn't it?
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{The Hardware Structure of A
+Computer}\label{the-hardware-structure-of-a-computer}
+
+\subsubsection{Introduction}\label{introduction-2}
+
+Now we want to try and understand how a modern computer is structured
+today. We will choose a relatively simple example, but don't fear if you
+don't understand what something is. All will come in due time! Thus we
+begin.
+
+Talk about the components, CPU, SRAM, DRAM, Hard Disks, I/O
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Memory Hierarchy}\label{memory-hierarchy}
+
+\subsubsection{Introduction}\label{introduction-3}
+
+One of the most fascinating ideas in the structure of computers is
+Memory. We know from the previous section that memory is the part of the
+computer that allows data to be stored and accessed rather quickly. It
+is a step down from Cache (in the CPU so super fast) and a step up from
+Hard Disks (tons of Capacity but takes longer to access). Ideally we
+would want an indefinitely large memory capacity such that any
+particular data we want would would be immediately available. However in
+order to reduce costs (memory is very expensive), we have developed a
+bunch of tricks and techniques to try to optimize the situation and get
+the most out of this bad bargain.
+
+\subsubsection{Memory Hierarchy}\label{memory-hierarchy-1}
+
+So now we come across our first trick \emph{Memory Hierarchy}. This
+structure (depicted below) that uses multiple levels of memories with
+different speeds and sizes efficiently in order to present the user with
+as much memory as is available in the cheapest technology, while
+providing access at the speed offered by the fastest memory.
+Unfortunately as the distance from the processor increases, both the
+size and access time of memories increase.
+
+Data is similarly hierarchical; a level closer to the processor is
+generally a subset of any level further away, and the entirety of the
+data is stored at the lowest level (generally a hard drive)
+
+\subsubsection{Principle of Locality}\label{principle-of-locality}
+
+So in order to allow programs to run efficiently, a technique we take
+advantage of is the \emph{Principles of Locality}. Programs accesses a
+relatively portion of their address space at any instant of time. We
+take advantage of the \emph{Memory Hierarchy} from above. There are two
+different types of locality:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{Temporal Locality} (locality in time) \emph{is the ideas that
+  if an item is referenced we will assume it will tend to be referenced
+  again soon.} An Example of this is \emph{Loops} in which that
+  variables and functions are likely to be accessed repeatedly so we
+  save them closer to the processing.
+\item
+  \textbf{Spatial Locality} (locality in space) \emph{is the idea that
+  if an item is referenced, items whose addresses are close by will
+  probably be referenced sometime soon.} Again we can use loops as an
+  example, since we know that instructions are normally accessed
+  sequentially so we can predict the next iteration and store it when we
+  access the previous iteration. We can also think of this using array
+  elements. We can save the nearby array elements when we get one of the
+  elements with hopes that it will come in handy. It may seem a bit
+  counterintuitive but it really does work!
+\end{enumerate}
+
+In short by using these two ideas (\emph{Memory Hierarchy} and the
+\emph{Principle of Locality}) uses smaller and faster memory
+technologies close to the processor. Thus, accesses that hit in the
+highest level of the hierarchy can be processed quickly. Accesses that
+miss go to lower levels of the hierarchy which are larger but slower.
+
+\subsubsection{Memory Access \textless{}- NEEDS
+WORK}\label{memory-access---needs-work}
+
+A memory hierarchy usually consist of many different levels as shown in
+the \emph{Memory Hierarchy} section. However Data can only be copied
+between only two adjacent levels at a time. Thus to show how this data
+is accessed we will show how one particular instance between two levels
+is done.
+
+\textbf{Block (Line)}: The minimum unit of information that can be
+either present or not present in cache. This is shown in the image above
+as the red square.
+
+Every pair of levels in the memory hierarchy can be thought of as having
+an:
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \textbf{Upper Level}:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Closer to the processor
+  \item
+    Smaller, faster, and more expensive than the lower level
+  \item
+    Data in this level is generally a subset of the lower level
+  \end{itemize}
+\item
+  \textbf{Lower Level}
+\end{itemize}
+
+\paragraph{SRAM Technology}\label{sram-technology}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Static Random Access Memory
+\item
+  Integrated circuits that form memory arrays
+\item
+  Usually has a single access port that can provide either a read or a
+  write
+\item
+  Fixed access time to any datum (read/write access times may differ)
+\item
+  Typically uses 6-8 transistors per bit to prevent information
+  disruption when read
+\item
+  As long as power is applied the value can be kept indefinitely
+\end{itemize}
+
+\paragraph{DRAM Technology}\label{dram-technology}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Dynamic Random Access Memory
+\item
+  Value keep in a cell is stored as a charge in a capacitor
+\item
+  Single transistor is used to access stored charge (either to read or
+  overwrite the stored charge)
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Because it uses one transistor per bit of storage, it is much denser
+    and cheaper than SRAM
+  \end{itemize}
+\item
+  Stores charge on a capacitor: it cannot be kept indefinitely and must
+  be periodically refreshed
+\item
+  \emph{Refresh}: contents from an entire row is read and immediately
+  written back to the same row
+\end{itemize}
+
+\subsubsection{Performance Specifications \textless{}- Why? Seems
+Unnecessary.}\label{performance-specifications---why-seems-unnecessary.}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Buffer Rows:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Acts like a SRAM: changing the address enables random bits access to
+    be accessed until the next row is accessed
+  \end{itemize}
+\item
+  Wider Chips:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Improves memory bandwidth
+  \end{itemize}
+\item
+  Organization:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Modern DRAMs are organized in banks
+  \item
+    \emph{Bank}: Series of rows
+
+    \begin{itemize}
+    \itemsep1pt\parskip0pt\parsep0pt
+    \item
+      Pre-charge opens/closes a bank
+    \end{itemize}
+  \item
+    DDR3: 4 banks
+  \item
+    \emph{Act }: Signal sent with row addresses that activates the
+    transfer of the row to the buffer
+  \item
+    When row is in the buffer, it can be transferred by
+
+    \begin{itemize}
+    \itemsep1pt\parskip0pt\parsep0pt
+    \item
+      Successive column addresses at whatever the width of the DRAM is
+      (typically 4, 8 or 16)
+    \item
+      Specifying a block transfer and the starting address
+    \end{itemize}
+  \end{itemize}
+\item
+  Clocks Added:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    SDRAM (Synchronous DRAM)
+  \item
+    Eliminates synchronization time between memory and processor
+  \item
+    Speed Advantage: transfers bits in the burst without having to
+    specify additional address bits
+  \item
+    DDR SDRAM (Double Data Rate):
+
+    \begin{itemize}
+    \itemsep1pt\parskip0pt\parsep0pt
+    \item
+      Data transfers on both the rising and falling edge of the clock
+      (twice bandwidth)
+    \item
+      Latest version: DDR4 can do 3200 million transfers per second
+      (1600 MHz clock)
+    \end{itemize}
+  \end{itemize}
+\item
+  Address Interleaving
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Instead of just a faster row buffer, DRAM can read from or write to
+    multiple banks, each having its own row buffer
+  \item
+    Accesses rotation: Enables sending addresses to several banks to
+    read/write simultaneously
+  \item
+    Bandwidth = Bandwidth x (\# of banks)
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Flash Memory}\label{flash-memory}
+
+\subsubsection{Disk Memory}\label{disk-memory}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  Wear Leveling
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Like other EEPROM technologies, writes can wear out flash memory
+    bits
+  \item
+    To handle this a controller is used to spread the writes by
+    remapping blocks that have been written many times to less used
+    blocks
+  \item
+    With this technology mobile devices are very unlikely to exceed
+    flash's write limits
+  \item
+    To improve performance even more, incorrectly manufactured memory
+    cells are mapped out
+  \item
+    Wear Leveling lowers flash's potential performance, but is needed
+    unless higher-level software monitors block wear
+  \end{itemize}
+\item
+  Magnetic Hard Disks consist of a collection of platters
+\item
+  Metal platters are covered with magnetic recording material on both
+  sides
+\item
+  Track: One of thousands of concentric circles that makes up the
+  surface of a magnetic disk
+\item
+  Sector:
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    One of the segments that make up a track on a magnetic disk
+  \item
+    The smallest amount of information that is read/written on a disk
+  \end{itemize}
+\item
+  Read/Write mechanism
+
+  \begin{itemize}
+  \itemsep1pt\parskip0pt\parsep0pt
+  \item
+    Read-Write Head: Movable arm containing a small electromagnetic coil
+  \item
+    Each surface has one arm containing two RW-Heads, one facing up and
+    one facing down
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Virtual Memory}\label{virtual-memory}
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Caches}\label{caches}
+
+\subsubsection{Structure}\label{structure}
+
+Registers, Etc.
+
+\subsubsection{Hitting and Missing \textless{}- NEEDS
+WORK}\label{hitting-and-missing---needs-work}
+
+We know from the \emph{The Hardware Structure of A Computer} section
+that caches live in the CPU and live near the top of Memory Hierarchy
+pyramid (registers are faster). So before we move on and discuss caches,
+we want to clear up some important terminology.
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  \emph{Hit}: When data requested by the processors is found in some
+  block in the upper level
+\item
+  \emph{Hit Rate}: Fraction of memory accesses found in a level of the
+  memory hierarchy
+\item
+  \emph{Hit Time}: Time required to access a level of the memory
+  hierarchy, including the time needed to determine whether the access
+  time is a hit or a miss
+\item
+  \emph{Miss}: When data requested by the processor is not found in the
+  upper level -\textgreater{} lower level accessed to retrieve the block
+  containing the requested data
+\item
+  \emph{Miss Rate}: Fraction of memory accesses not found in a level of
+  the memory hierarchy (1 - Hit Rate)
+\item
+  \emph{Miss Penalty}: Time required to fetch a block from a lower level
+  of the memory hierarchy, including --- time to access the block ---
+  transmit it from one level to the other --- insert it in the level
+  that experienced the miss --- pass the block to the requestor \#\#\#
+  AMAT
+\end{itemize}
+
+\subsubsection{Direct Mapped Caches}\label{direct-mapped-caches}
+
+\subsubsection{Multilevel Caches}\label{multilevel-caches}
+
+\subsubsection{Set Associative Caches}\label{set-associative-caches}
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Machine Instructions}\label{machine-instructions}
+
+\subsubsection{Introduction}\label{introduction-4}
+
+\subsubsection{MIPS}\label{mips}
+
+Basics MIPS stuff e.g.~how it works, instructions, link to green sheet,
+and uses Converting Binary to MIPS, Parity Bits, and those table things
+and everything. CS61C Winston's Discussion will be helpful.
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Binary Representations}\label{binary-representations}
+
+\subsubsection{Introduction}\label{introduction-5}
+
+Signed, Unsigned, Two's Complement, Hex, Conversions, Extensions etc.
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Hardware Level}\label{hardware-level}
+
+\subsubsection{Introduction}\label{introduction-6}
+
+\subsubsection{Transistors and Logic
+Gates}\label{transistors-and-logic-gates}
+
+\subsubsection{Boolean Algebra}\label{boolean-algebra}
+
+\subsubsection{}\label{section}
+
+Assembly to Machine, Logic Gates,
+\href{https://www.cise.ufl.edu/~mssz/CompOrg/CDA-proc.html}{Useful
+Processor Stuff}
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{The CPU}\label{the-cpu}
+
+\subsubsection{Structure}\label{structure-1}
+
+Purpose? Multiprocessing ALU, shifters, Reg files, Muxing, demuxming,
+FSM \#\#\# Performance CPU Time, CPI, Instruction Count, Clock Cycle
+time?
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Code Optimization
+Techniques}\label{code-optimization-techniques}
+
+\subsubsection{Introduction}\label{introduction-7}
+
+\subsubsection{Cache Blocking}\label{cache-blocking}
+
+\subsubsection{Pipelining}\label{pipelining}
+
+Lead to next section : Parallelism
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Parallelism}\label{parallelism}
+
+\subsubsection{Introduction}\label{introduction-8}
+
+\subsubsection{Amdahl's Law}\label{amdahls-law}
+
+\subsubsection{Request Level
+Parallelism}\label{request-level-parallelism}
+
+\paragraph{Application: MapReduce}\label{application-mapreduce}
+
+\subsubsection{Data Level Parallelism}\label{data-level-parallelism}
+
+\subsubsection{Flynn Taxonomy}\label{flynn-taxonomy}
+
+\subsubsection{Thread Level Parallelism}\label{thread-level-parallelism}
+
+\subsubsection{Shared Memory}\label{shared-memory}
+
+\subsubsection{Application: OpenMP (?)}\label{application-openmp}
+
+\subsubsection{Instruction Level
+Parallelism}\label{instruction-level-parallelism}
+
+\subsubsection{Application: Warehouse Scale
+Computing}\label{application-warehouse-scale-computing}
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Redundancy}\label{redundancy}
+
+ECC, RAID, Stuff from Professor Katz's lecture.
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Virtual Machines (?)}\label{virtual-machines}
+
+\begin{center}\rule{3in}{0.4pt}\end{center}
+
+\subsection{Colophon}\label{colophon}
+
+Written by \href{http://krishna.im}{Krishna Parashar} in Markdown on
+Byword. Used \href{http://johnmacfarlane.net/pandoc/}{Pandoc} to convert
+from Markdown to Latex.
+
+
+% % 
+
+
+
+
+
+\end{multicols}
+\end{document}
